@@ -16,6 +16,7 @@ html,body{background:#ffffff;margin:0;padding:0}
 .pill{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;white-space:nowrap}
 .pill-ok{background:#e6f4ea;color:#137333;border:1px solid #b7dfbf}
 .pill-off{background:#f4f6f9;color:#5f6368;border:1px solid #e4e7ec}
+.pill-warn{background:#fff8e1;color:#e65100;border:1px solid #ffe082}
 .panel{padding:16px;display:flex;flex-direction:column;gap:14px;background:#f4f6f9}
 .card{background:#ffffff;border:1px solid #e4e7ec;border-radius:12px;padding:14px}
 .card-hl{border-color:#4285f4;background:#fafcff}
@@ -31,8 +32,7 @@ html,body{background:#ffffff;margin:0;padding:0}
 .btn-red{background:#fce8e6;border-color:#f5c6c2;color:#c62828}
 .btn-red:hover{background:#fad2cf}
 .btn-warn{background:#fff8e1;border-color:#ffe082;color:#e65100}
-.btn-warn:hover{background:#fff3cd}
-input[type=text],input[type=number],input[type=password]{font-size:12px;padding:8px 10px;border-radius:8px;border:1.5px solid #e4e7ec;background:#ffffff;color:#1a1a1a;outline:none;width:100%;font-family:inherit}
+input[type=text],input[type=number]{font-size:12px;padding:8px 10px;border-radius:8px;border:1.5px solid #e4e7ec;background:#ffffff;color:#1a1a1a;outline:none;width:100%;font-family:inherit}
 input:focus{border-color:#4285f4;box-shadow:0 0 0 3px rgba(66,133,244,.12)}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:540px){.g2{grid-template-columns:1fr}}
@@ -69,15 +69,16 @@ video{width:100%;display:block;max-height:175px;object-fit:contain}
 .alert{padding:9px 12px;font-size:12px;border-radius:8px;margin-top:6px;line-height:1.5;font-weight:500}
 .alert-ok{background:#e6f4ea;color:#137333;border:1px solid #b7dfbf}
 .alert-err{background:#fce8e6;color:#c62828;border:1px solid #f5c6c2}
+.alert-info{background:#e8f0fe;color:#1a56d6;border:1px solid #c5d8fd}
 .join-wrap{max-width:340px;margin:20px auto;text-align:center}
 .big-code{font-size:26px;letter-spacing:.16em;text-align:center;font-family:monospace;text-transform:uppercase;width:140px;padding:10px;font-weight:700;background:#ffffff}
 .pub-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid #e4e7ec;border-radius:20px;cursor:pointer;font-size:12px;background:#ffffff;transition:all .12s}
 .pub-chip:hover{border-color:#4285f4;background:#f0f6ff}
-.setup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:flex-start;justify-content:center;padding:20px;z-index:100;overflow-y:auto}
-.setup-box{background:#ffffff;border-radius:16px;padding:20px;width:100%;max-width:480px;display:flex;flex-direction:column;gap:12px;margin-top:10px}
-.step-li{display:flex;gap:10px;align-items:flex-start;font-size:12px;color:#5f6368;padding:4px 0;line-height:1.6}
-.step-badge{width:20px;height:20px;border-radius:50%;background:#e8f0fe;color:#1a56d6;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;margin-top:1px}
-.divider{height:1px;background:#e4e7ec;margin:8px 0}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:flex-start;justify-content:center;padding:20px;z-index:100;overflow-y:auto}
+.overlay-box{background:#ffffff;border-radius:16px;padding:20px;width:100%;max-width:460px;display:flex;flex-direction:column;gap:12px;margin-top:10px}
+.divider{height:1px;background:#e4e7ec;margin:4px 0}
+.spin{display:inline-block;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -90,8 +91,8 @@ video{width:100%;display:block;max-height:175px;object-fit:contain}
     <button class="rtab on" id="tabU" onclick="go('u')">使用者</button>
   </div>
   <div style="display:flex;align-items:center;gap:6px">
-    <span id="modeTag" class="pill pill-off">本機</span>
-    <button class="btn sm" onclick="openSetup()" id="setupBtn" style="display:none;padding:4px 9px" title="設定">&#9881;</button>
+    <span id="modeTag" class="pill pill-warn">設定中…</span>
+    <button class="btn sm" onclick="openSetup()" id="setupBtn" style="display:none;padding:4px 9px">⚙</button>
   </div>
 </div>
 
@@ -102,7 +103,7 @@ video{width:100%;display:block;max-height:175px;object-fit:contain}
       <div class="slabel" style="margin:0">場次管理</div>
       <button class="btn sm btn-blue" onclick="newSess()">+ 新增場次</button>
     </div>
-    <div id="sessList"><div class="empty-state">尚無場次，點右上方新增</div></div>
+    <div id="sessList"><div class="empty-state">尚無場次</div></div>
   </div>
   <div id="editor" style="display:none;flex-direction:column;gap:12px">
     <div class="card card-hl">
@@ -110,7 +111,7 @@ video{width:100%;display:block;max-height:175px;object-fit:contain}
         <div class="slabel" style="margin:0">編輯場次</div>
         <span id="editCode" class="code-tag"></span>
         <input type="text" id="editName" placeholder="場次名稱" style="flex:1;min-width:100px">
-        <button class="btn sm btn-green" onclick="pubSess()">&#9654; 發布</button>
+        <button class="btn sm btn-green" id="pubBtn" onclick="pubSess()">▶ 發布</button>
         <button class="btn sm btn-red" onclick="delSess()">刪除</button>
       </div>
       <div class="g2">
@@ -133,7 +134,7 @@ video{width:100%;display:block;max-height:175px;object-fit:contain}
         <input type="number" id="eStart" value="0" style="width:65px">
         <span style="font-size:12px;color:#5f6368">結束秒</span>
         <input type="number" id="eEnd" value="600" style="width:65px">
-        <button class="btn sm" onclick="saveSess()" style="margin-left:auto">💾 儲存</button>
+        <button class="btn sm" id="saveBtn" onclick="saveSess()" style="margin-left:auto">💾 儲存至雲端</button>
       </div>
     </div>
     <div class="card">
@@ -170,7 +171,6 @@ video{width:100%;display:block;max-height:175px;object-fit:contain}
       <div id="pubList" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"></div>
     </div>
   </div>
-
   <div id="workspace" style="display:none;flex-direction:column;gap:12px">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
       <div style="display:flex;align-items:center;gap:10px">
@@ -218,45 +218,55 @@ video{width:100%;display:block;max-height:175px;object-fit:contain}
   </div>
 </div>
 
-<!-- 設定彈出視窗（僅研究者可見）-->
-<div id="setupOverlay" style="display:none" class="setup-overlay" onclick="if(event.target===this)closeSetup()">
-  <div class="setup-box">
+<!-- 研究者設定彈窗 -->
+<div id="setupOverlay" style="display:none" class="overlay" onclick="if(event.target===this)closeSetup()">
+  <div class="overlay-box">
     <div style="display:flex;justify-content:space-between;align-items:center">
-      <div style="font-size:14px;font-weight:700;color:#1a1a1a">⚙ 研究者設定</div>
-      <button class="btn sm" onclick="closeSetup()" style="padding:4px 10px">✕</button>
+      <div style="font-size:14px;font-weight:700">⚙ 研究者設定</div>
+      <button class="btn sm" onclick="closeSetup()">✕</button>
     </div>
-    <div>
-      <div class="slabel">Google Apps Script 網址</div>
-      <div style="display:flex;gap:8px">
-        <input type="text" id="gsUrl" placeholder="https://script.google.com/macros/s/…/exec" style="flex:1">
-        <button class="btn sm btn-blue" onclick="connectGS()" id="connectBtn" style="white-space:nowrap;flex-shrink:0">連接</button>
-      </div>
-      <div id="gsErr" style="display:none;margin-top:6px" class="alert alert-err"></div>
+    <div style="font-size:12px;color:#5f6368;background:#f4f6f9;padding:10px;border-radius:8px;line-height:1.8">
+      <strong>Apps Script 網址</strong><br>
+      <span id="urlDisp" style="font-family:monospace;font-size:11px;word-break:break-all;color:#1a56d6"></span>
     </div>
     <div class="divider"></div>
-    <div class="slabel">三步驟設定</div>
-    <div class="step-li"><div class="step-badge">1</div><div>Google 試算表 → 擴充功能 → Apps Script → 貼上程式碼儲存</div></div>
-    <div class="step-li"><div class="step-badge">2</div><div>部署 → 新增部署 → 網路應用程式 → 執行：<strong>我</strong>，存取：<strong>所有人</strong></div></div>
-    <div class="step-li"><div class="step-badge">3</div><div>複製網址貼到上方，按連接</div></div>
-    <div style="display:flex;gap:8px;margin-top:4px">
-      <button class="btn sm" onclick="useDemo()" style="flex:1;justify-content:center">本機示範模式</button>
-      <button class="btn sm btn-green" onclick="closeSetup()" style="flex:1;justify-content:center">完成 ✓</button>
-    </div>
+    <div style="font-size:11px;color:#9aa0a6">場次設定儲存於 Google Sheets，圖表儲存於 Google Drive，所有裝置共享。</div>
+    <button class="btn sm btn-green" onclick="closeSetup()" style="justify-content:center">關閉 ✓</button>
   </div>
 </div>
 
 </div>
 <script>
+// ══════════════════════════════════════════════════
+//  ▼▼▼ 將下方換成你的 Apps Script 網址 ▼▼▼
+const APPS_SCRIPT_URL = '';
+//  ▲▲▲ 將上方換成你的 Apps Script 網址 ▲▲▲
+// ══════════════════════════════════════════════════
+
 const COLS=['#ea4335','#4285f4','#34a853','#fbbc04','#9334e6','#e91e8c'];
-let $gsUrl=null,$mode='demo';
-let sessions={},selId=null;
+let sessions={}, selId=null;
 let U={annMode:false,color:COLS[0],anns:[],t0:0,t1:600,sessId:null,name:'',isYT:false,ytId:null};
 
+// 初始化色票
 const swCont=document.getElementById('swCont');
 COLS.forEach(c=>{
   const s=document.createElement('div');s.className='swatch'+(c===U.color?' on':'');s.style.background=c;
   s.onclick=()=>{U.color=c;document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('on'));s.classList.add('on');};
   swCont.appendChild(s);
+});
+
+// 啟動
+window.addEventListener('DOMContentLoaded', async ()=>{
+  const tag=document.getElementById('modeTag');
+  const urlDisp=document.getElementById('urlDisp');
+  if(APPS_SCRIPT_URL){
+    tag.textContent='Google Sheet ✓';tag.className='pill pill-ok';
+    if(urlDisp) urlDisp.textContent=APPS_SCRIPT_URL;
+  } else {
+    tag.textContent='本機模式';tag.className='pill pill-off';
+    if(urlDisp) urlDisp.textContent='（未設定）';
+  }
+  await loadAllSessions();
 });
 
 function go(r){
@@ -267,35 +277,31 @@ function go(r){
   document.getElementById('setupBtn').style.display=r==='r'?'inline-flex':'none';
   if(r==='u') refreshPubList();
 }
-
 function openSetup(){document.getElementById('setupOverlay').style.display='flex';}
 function closeSetup(){document.getElementById('setupOverlay').style.display='none';}
 
-function saveLocal(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch(e){}}
-function loadLocal(key){try{const v=localStorage.getItem(key);return v?JSON.parse(v):null;}catch(e){return null;}}
-
-async function connectGS(){
-  const url=document.getElementById('gsUrl').value.trim();
-  const btn=document.getElementById('connectBtn'),err=document.getElementById('gsErr');
-  err.style.display='none';
-  if(!url.includes('script.google.com')){err.textContent='請貼上正確的 Apps Script 網址';err.style.display='block';return;}
-  btn.textContent='連線中…';btn.disabled=true;
-  $gsUrl=url;$mode='google';
-  saveLocal('gsUrl',url);
-  document.getElementById('modeTag').textContent='Google Sheet ✓';
-  document.getElementById('modeTag').className='pill pill-ok';
-  await loadAllSessions();
-  closeSetup();
-  btn.textContent='連接';btn.disabled=false;
+// API helpers
+async function apiGet(params){
+  const url=APPS_SCRIPT_URL+'?'+new URLSearchParams(params);
+  const r=await fetch(url,{redirect:'follow'});
+  return r.json();
+}
+async function apiPost(body){
+  const r=await fetch(APPS_SCRIPT_URL,{
+    method:'POST',
+    headers:{'Content-Type':'text/plain'},
+    body:JSON.stringify(body),
+    redirect:'follow'
+  });
+  return r.json();
 }
 
-function useDemo(){$mode='demo';document.getElementById('modeTag').textContent='本機示範';closeSetup();}
-
+// Session管理
 function genCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<4;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
 
 function newSess(){
   let code;do{code=genCode();}while(sessions[code]);
-  sessions[code]={code,name:'場次 '+code,chartSrc:null,videoUrl:'',t0:0,t1:600,published:false};
+  sessions[code]={code,name:'場次 '+code,chartSrc:null,chartUrl:'',videoUrl:'',t0:0,t1:600,published:false};
   renderSessList();selectSess(code);
 }
 
@@ -308,15 +314,17 @@ function selectSess(code){
   document.getElementById('eEnd').value=s.t1;
   document.getElementById('vidUrl').value=s.videoUrl||'';
   const p=document.getElementById('imgPrev');p.innerHTML='';
-  if(s.chartSrc){const i=new Image();i.src=s.chartSrc;i.style.cssText='width:100%;max-height:70px;object-fit:contain;border-radius:6px';p.appendChild(i);}
-  else p.innerHTML='🖼 點擊上傳圖表圖片';
+  if(s.chartUrl||s.chartSrc){
+    const src=s.chartUrl||s.chartSrc;
+    const i=new Image();i.src=src;i.style.cssText='width:100%;max-height:70px;object-fit:contain;border-radius:6px';
+    p.appendChild(i);
+  } else {p.innerHTML='🖼 點擊上傳圖表圖片';}
   renderSessList();loadAnns();
 }
 
 function renderSessList(){
-  const c=document.getElementById('sessList');
-  const keys=Object.keys(sessions);
-  if(!keys.length){c.innerHTML='<div class="empty-state">尚無場次，點右上方新增</div>';return;}
+  const c=document.getElementById('sessList');const keys=Object.keys(sessions);
+  if(!keys.length){c.innerHTML='<div class="empty-state">尚無場次</div>';return;}
   c.innerHTML='';
   keys.forEach(code=>{
     const s=sessions[code];
@@ -326,32 +334,11 @@ function renderSessList(){
   });
 }
 
-function store(){saveLocal('sessions',sessions);}
-
 async function loadAllSessions(){
-  const saved=loadLocal('sessions');
-  if(saved) sessions=saved;
+  if(APPS_SCRIPT_URL){
+    try{const d=await apiGet({action:'getSessions'});if(d.sessions) sessions=d.sessions;}catch(e){}
+  }
   renderSessList();refreshPubList();
-}
-
-function saveSess(){
-  if(!selId)return;
-  sessions[selId].name=document.getElementById('editName').value||sessions[selId].name;
-  sessions[selId].t0=parseFloat(document.getElementById('eStart').value)||0;
-  sessions[selId].t1=parseFloat(document.getElementById('eEnd').value)||600;
-  renderSessList();store();topNote('已儲存 ✓');
-}
-
-function pubSess(){
-  if(!selId)return;
-  if(!sessions[selId].chartSrc){topNote('請先上傳圖表','err');return;}
-  sessions[selId].name=document.getElementById('editName').value||sessions[selId].name;
-  sessions[selId].published=true;renderSessList();store();topNote('場次 '+selId+' 已發布 ✓');refreshPubList();
-}
-
-function delSess(){
-  if(!selId||!confirm('確定刪除場次 '+selId+'？'))return;
-  delete sessions[selId];selId=null;document.getElementById('editor').style.display='none';renderSessList();store();
 }
 
 function onImg(e){
@@ -364,43 +351,63 @@ function onImg(e){
       cv.width=Math.floor(img.width*sc);cv.height=Math.floor(img.height*sc);
       cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
       sessions[selId].chartSrc=cv.toDataURL('image/jpeg',.82);
+      sessions[selId].chartUrl='';
       const p=document.getElementById('imgPrev');p.innerHTML='';
-      const pi=new Image();pi.src=sessions[selId].chartSrc;pi.style.cssText='width:100%;max-height:70px;object-fit:contain;border-radius:6px';p.appendChild(pi);store();
+      const pi=new Image();pi.src=sessions[selId].chartSrc;pi.style.cssText='width:100%;max-height:70px;object-fit:contain;border-radius:6px';p.appendChild(pi);
     };img.src=ev.target.result;
   };reader.readAsDataURL(f);
 }
 
-function applyVid(){if(!selId)return;sessions[selId].videoUrl=document.getElementById('vidUrl').value.trim();store();topNote('影片已套用');}
+function applyVid(){if(!selId)return;sessions[selId].videoUrl=document.getElementById('vidUrl').value.trim();}
 
-function isYT(u){return u&&(u.includes('youtube.com')||u.includes('youtu.be'));}
-function ytId(u){const m=u.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);return m?m[1]:null;}
+async function saveSess(){
+  if(!selId)return;
+  const btn=document.getElementById('saveBtn');btn.disabled=true;btn.innerHTML='<span class="spin">↺</span> 上傳中…';
+  sessions[selId].name=document.getElementById('editName').value||sessions[selId].name;
+  sessions[selId].t0=parseFloat(document.getElementById('eStart').value)||0;
+  sessions[selId].t1=parseFloat(document.getElementById('eEnd').value)||600;
+  sessions[selId].videoUrl=document.getElementById('vidUrl').value.trim();
+  try{
+    if(APPS_SCRIPT_URL){
+      const payload={action:'saveSession',...sessions[selId]};
+      const res=await apiPost(payload);
+      if(res.chartUrl){sessions[selId].chartUrl=res.chartUrl;sessions[selId].chartSrc=null;}
+    }
+    renderSessList();topNote('已儲存 ✓');
+  }catch(e){topNote('儲存失敗','err');}
+  btn.disabled=false;btn.innerHTML='💾 儲存至雲端';
+}
 
-function setupVid(url,t0){
-  const area=document.getElementById('vidArea');
-  U.isYT=isYT(url);U.ytId=U.isYT?ytId(url):null;
-  if(!url){area.innerHTML='<div style="height:36px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#9aa0a6">（未設定影片）</div>';return;}
-  if(U.isYT&&U.ytId){
-    area.innerHTML=`<iframe id="ytf" src="https://www.youtube.com/embed/${U.ytId}?start=${Math.floor(t0||0)}&rel=0" style="width:100%;height:175px;border:none;display:block" allow="autoplay;fullscreen"></iframe>`;
-    document.getElementById('dt').textContent='YT';
-  } else {
-    area.innerHTML=`<video id="uv" controls src="${url}" style="width:100%;max-height:175px;display:block;background:#111"></video>`;
-    const v=document.getElementById('uv');
-    v.ontimeupdate=uptick;
-    v.onloadedmetadata=()=>{document.getElementById('dt').textContent=fmt(v.duration);if(v.duration>0)U.t1=v.duration;};
-  }
+async function pubSess(){
+  if(!selId)return;
+  if(!sessions[selId].chartSrc&&!sessions[selId].chartUrl){topNote('請先上傳圖表','err');return;}
+  sessions[selId].name=document.getElementById('editName').value||sessions[selId].name;
+  sessions[selId].published=true;
+  const btn=document.getElementById('pubBtn');btn.disabled=true;btn.textContent='發布中…';
+  try{
+    if(APPS_SCRIPT_URL){
+      const payload={action:'saveSession',...sessions[selId]};
+      const res=await apiPost(payload);
+      if(res.chartUrl){sessions[selId].chartUrl=res.chartUrl;sessions[selId].chartSrc=null;}
+    }
+    renderSessList();refreshPubList();topNote('場次 '+selId+' 已發布 ✓');
+  }catch(e){topNote('發布失敗','err');}
+  btn.disabled=false;btn.textContent='▶ 發布';
+}
+
+async function delSess(){
+  if(!selId||!confirm('確定刪除場次 '+selId+'？'))return;
+  if(APPS_SCRIPT_URL){try{await apiPost({action:'deleteSession',code:selId});}catch(e){}}
+  delete sessions[selId];selId=null;
+  document.getElementById('editor').style.display='none';renderSessList();
 }
 
 async function loadAnns(){
   if(!selId)return;const c=document.getElementById('resAnns');
-  c.innerHTML='<div class="empty-state">↺ 載入中…</div>';
+  c.innerHTML='<div class="empty-state"><span class="spin">↺</span> 載入中…</div>';
   try{
     let all=[];
-    if($mode==='google'&&$gsUrl){
-      const r=await fetch(`${$gsUrl}?action=getAnns&code=${selId}`,{redirect:'follow'});
-      const d=await r.json();all=d.submissions||[];
-    } else {
-      all=loadLocal('anns_'+selId)||[];
-    }
+    if(APPS_SCRIPT_URL){const d=await apiGet({action:'getAnns',code:selId});all=d.submissions||[];}
     document.getElementById('annCnt').textContent=all.length?`(${all.length} 位)`:'';
     if(!all.length){c.innerHTML='<div class="empty-state">尚無標註</div>';return;}
     c.innerHTML='';
@@ -415,15 +422,13 @@ async function loadAnns(){
         c.appendChild(row);
       });
     });
-  }catch(e){c.innerHTML=`<div class="empty-state" style="color:#c62828">載入失敗：${e.message}</div>`;}
+  }catch(e){c.innerHTML=`<div class="empty-state" style="color:#c62828">載入失敗</div>`;}
 }
 
 async function exportJSON(){
   if(!selId){alert('請先選擇場次');return;}
   let all=[];
-  if($mode==='google'&&$gsUrl){
-    try{const r=await fetch(`${$gsUrl}?action=getAnns&code=${selId}`,{redirect:'follow'});const d=await r.json();all=d.submissions||[];}catch(e){alert('匯出失敗：'+e.message);return;}
-  } else {all=loadLocal('anns_'+selId)||[];}
+  if(APPS_SCRIPT_URL){try{const d=await apiGet({action:'getAnns',code:selId});all=d.submissions||[];}catch(e){alert('匯出失敗');return;}}
   if(!all.length){alert('尚無資料');return;}
   const blob=new Blob([JSON.stringify({session:sessions[selId],submissions:all},null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`session_${selId}.json`;a.click();
@@ -447,14 +452,20 @@ async function joinSess(){
   const nameVal=document.getElementById('nameIn').value.trim()||'匿名';
   const errEl=document.getElementById('joinErr');errEl.style.display='none';
   if(!code){errEl.textContent='請輸入場次代碼';errEl.style.display='block';return;}
-  const sess=sessions[code];
-  if(!sess||!sess.published){errEl.textContent='找不到此場次，請確認代碼';errEl.style.display='block';return;}
-  U.sessId=code;U.name=nameVal;U.t0=sess.t0;U.t1=sess.t1;U.anns=[];U.annMode=false;
+  errEl.innerHTML='<span class="spin">↺</span> 查詢中…';errEl.className='alert alert-info';errEl.style.display='block';
+  let sess=sessions[code];
+  if(!sess&&APPS_SCRIPT_URL){
+    try{const d=await apiGet({action:'getSession',code});if(d&&d.code){sess=sessions[code]=d;}}catch(e){}
+  }
+  errEl.style.display='none';
+  if(!sess||!sess.published){errEl.textContent='找不到此場次，請確認代碼';errEl.className='alert alert-err';errEl.style.display='block';return;}
+  U.sessId=code;U.name=nameVal;U.t0=parseFloat(sess.t0)||0;U.t1=parseFloat(sess.t1)||600;U.anns=[];U.annMode=false;
   document.getElementById('wsTitle').textContent=sess.name;
   document.getElementById('wsCode').textContent=code;
   document.getElementById('wsUser').textContent=nameVal;
-  if(sess.chartSrc)document.getElementById('cimg').src=sess.chartSrc;
-  setupVid(sess.videoUrl||'',sess.t0);
+  const imgSrc=sess.chartUrl||sess.chartSrc||'';
+  if(imgSrc) document.getElementById('cimg').src=imgSrc;
+  setupVid(sess.videoUrl||'',U.t0);
   document.getElementById('joinScreen').style.display='none';
   document.getElementById('workspace').style.display='flex';
   document.getElementById('mBtn').textContent='✏ 標註：關';
@@ -470,10 +481,26 @@ function leaveSess(){
   document.getElementById('codeIn').value='';refreshPubList();
 }
 
+function isYT(u){return u&&(u.includes('youtube.com')||u.includes('youtu.be'));}
+function ytId(u){const m=u.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);return m?m[1]:null;}
+function setupVid(url,t0){
+  const area=document.getElementById('vidArea');
+  U.isYT=isYT(url);U.ytId=U.isYT?ytId(url):null;
+  if(!url){area.innerHTML='<div style="height:36px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#9aa0a6">（未設定影片）</div>';return;}
+  if(U.isYT&&U.ytId){
+    area.innerHTML=`<iframe id="ytf" src="https://www.youtube.com/embed/${U.ytId}?start=${Math.floor(t0||0)}&rel=0" style="width:100%;height:175px;border:none;display:block" allow="autoplay;fullscreen"></iframe>`;
+    document.getElementById('dt').textContent='YT';
+  } else {
+    area.innerHTML=`<video id="uv" controls src="${url}" style="width:100%;max-height:175px;display:block;background:#111"></video>`;
+    const v=document.getElementById('uv');
+    v.ontimeupdate=uptick;
+    v.onloadedmetadata=()=>{document.getElementById('dt').textContent=fmt(v.duration);if(v.duration>0)U.t1=v.duration;};
+  }
+}
+
 function fmt(s){const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec;}
 function pctToT(p){return U.t0+p*(U.t1-U.t0);}
 function tToPct(t){return (t-U.t0)/(U.t1-U.t0);}
-
 function cclick(e){
   const r=document.getElementById('cbox').getBoundingClientRect();
   const p=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));const t=pctToT(p);
@@ -486,7 +513,6 @@ function chov(e){
   document.getElementById('htip').textContent=fmt(pctToT(p))+(U.annMode?' — 點擊標註':' — 點擊跳轉');
 }
 function cleave(){document.getElementById('htip').textContent='';}
-
 function seekT(t){
   t=Math.max(U.t0,Math.min(t,U.t1));
   if(U.isYT&&U.ytId)document.getElementById('ytf').src=`https://www.youtube.com/embed/${U.ytId}?start=${Math.floor(t)}&autoplay=1&rel=0`;
@@ -540,14 +566,9 @@ async function submitAnns(){
   const btn=document.getElementById('subBtn');btn.disabled=true;btn.textContent='提交中…';
   const sub={uid:'u_'+Date.now().toString(36),sessionCode:U.sessId,name:U.name,at:new Date().toISOString(),anns:U.anns};
   try{
-    if($mode==='google'&&$gsUrl){
-      await fetch($gsUrl,{method:'POST',mode:'no-cors',body:JSON.stringify({action:'submit',...sub})});
-    } else {
-      const all=loadLocal('anns_'+U.sessId)||[];
-      all.push(sub);saveLocal('anns_'+U.sessId,all);
-    }
+    if(APPS_SCRIPT_URL){await fetch(APPS_SCRIPT_URL,{method:'POST',mode:'no-cors',body:JSON.stringify({action:'submit',...sub})});}
     showNfy('✓ 已提交 '+U.anns.length+' 個標註！');
-  }catch(e){showNfy('提交失敗：'+e.message,'err');}
+  }catch(e){showNfy('提交失敗','err');}
   finally{btn.disabled=false;btn.textContent='✓ 提交標註';}
 }
 
@@ -560,17 +581,6 @@ function topNote(msg,type){
   el.textContent=msg;el.className='pill '+(type==='err'?'pill-off':'pill-ok');
   setTimeout(()=>{el.textContent=orig;el.className=cls;},2500);
 }
-
-// 初始化：讀取本機設定
-(function init(){
-  const url=loadLocal('gsUrl');
-  if(url){$gsUrl=url;$mode='google';
-    document.getElementById('gsUrl').value=url;
-    document.getElementById('modeTag').textContent='Google Sheet ✓';
-    document.getElementById('modeTag').className='pill pill-ok';
-  }
-  loadAllSessions();
-})();
 </script>
 </body>
 </html>
