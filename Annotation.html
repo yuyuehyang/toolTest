@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>課程觀察工具</title>
+<style>
+html,body{background:#ffffff;margin:0;padding:0}
+*{box-sizing:border-box;margin:0;padding:0}
+.app{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f4f6f9;color:#1a1a1a;min-height:100vh}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:#ffffff;border-bottom:1.5px solid #e4e7ec;gap:8px;flex-wrap:wrap}
+.logo{font-size:13px;font-weight:700;color:#1a1a1a}
+.rtabs{display:flex;background:#f4f6f9;border-radius:8px;padding:3px;gap:2px}
+.rtab{padding:6px 18px;border:none;border-radius:6px;background:transparent;font-size:12px;cursor:pointer;color:#5f6368;font-weight:500;transition:all .15s}
+.rtab.on{background:#ffffff;color:#1a1a1a;font-weight:700;box-shadow:0 1px 4px rgba(0,0,0,.14)}
+.pill{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;white-space:nowrap}
+.pill-ok{background:#e6f4ea;color:#137333;border:1px solid #b7dfbf}
+.pill-off{background:#f4f6f9;color:#5f6368;border:1px solid #e4e7ec}
+.panel{padding:16px;display:flex;flex-direction:column;gap:14px;background:#f4f6f9}
+.card{background:#ffffff;border:1px solid #e4e7ec;border-radius:12px;padding:14px}
+.card-hl{border-color:#4285f4;background:#fafcff}
+.slabel{font-size:10px;font-weight:700;color:#9aa0a6;letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px}
+.btn{display:inline-flex;align-items:center;gap:5px;border-radius:8px;padding:7px 14px;font-size:12px;cursor:pointer;font-weight:600;border:1px solid #e4e7ec;background:#ffffff;color:#1a1a1a;transition:all .12s}
+.btn:hover{background:#f8f9fa}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.sm{padding:5px 10px;font-size:11px}
+.btn-blue{background:#e8f0fe;border-color:#c5d8fd;color:#1a56d6}
+.btn-blue:hover{background:#d2e3fc}
+.btn-green{background:#e6f4ea;border-color:#b7dfbf;color:#137333}
+.btn-green:hover{background:#ceead6}
+.btn-red{background:#fce8e6;border-color:#f5c6c2;color:#c62828}
+.btn-red:hover{background:#fad2cf}
+.btn-warn{background:#fff8e1;border-color:#ffe082;color:#e65100}
+.btn-warn:hover{background:#fff3cd}
+input[type=text],input[type=number],input[type=password]{font-size:12px;padding:8px 10px;border-radius:8px;border:1.5px solid #e4e7ec;background:#ffffff;color:#1a1a1a;outline:none;width:100%;font-family:inherit}
+input:focus{border-color:#4285f4;box-shadow:0 0 0 3px rgba(66,133,244,.12)}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:540px){.g2{grid-template-columns:1fr}}
+.upzone{border:1.5px dashed #dadce0;border-radius:8px;padding:18px;text-align:center;cursor:pointer;color:#9aa0a6;font-size:12px;transition:all .15s;background:#fafafa}
+.upzone:hover{border-color:#4285f4;background:#f0f6ff;color:#1a56d6}
+.sess-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid #e8eaed;margin-bottom:6px;cursor:pointer;background:#ffffff;transition:all .12s}
+.sess-item:hover{background:#f8f9fa}
+.sess-item.active{border-color:#4285f4;background:#f0f6ff}
+.code-tag{font-family:monospace;font-size:12px;font-weight:700;background:#f4f6f9;border:1px solid #e4e7ec;padding:3px 8px;border-radius:6px;letter-spacing:.08em;color:#1a1a1a}
+.st-pub{background:#e6f4ea;color:#137333;font-size:10px;padding:3px 9px;border-radius:20px;font-weight:700;border:1px solid #b7dfbf}
+.st-draft{background:#f4f6f9;color:#5f6368;font-size:10px;padding:3px 9px;border-radius:20px;font-weight:600}
+.chart-box{position:relative;overflow:hidden;border-radius:8px;background:#f4f6f9;min-height:90px}
+.chart-box img{width:100%;display:block}
+.chart-hit{position:absolute;inset:0;cursor:pointer}
+.redline{position:absolute;top:0;bottom:0;width:2px;background:#ea4335;pointer-events:none;z-index:10}
+.redline::after{content:'';position:absolute;top:-1px;left:-4px;width:10px;height:10px;background:#ea4335;border-radius:50%}
+.marker{position:absolute;top:0;bottom:0;width:2px;pointer-events:none;z-index:8}
+.marker-lbl{position:absolute;top:4px;left:4px;font-size:9px;padding:2px 5px;border-radius:3px;white-space:nowrap;max-width:90px;overflow:hidden;text-overflow:ellipsis;font-weight:700}
+.vidbox{background:#111;border-radius:8px;overflow:hidden}
+video{width:100%;display:block;max-height:175px;object-fit:contain}
+.tl-track{height:5px;background:#e4e7ec;border-radius:3px;cursor:pointer;margin:7px 0}
+.tl-fill{height:100%;border-radius:3px;background:#ea4335;transition:width .1s}
+.swatch{width:16px;height:16px;border-radius:50%;cursor:pointer;border:2.5px solid transparent;transition:transform .1s;flex-shrink:0}
+.swatch:hover{transform:scale(1.2)}
+.swatch.on{border-color:#1a1a1a}
+.ann-list{max-height:130px;overflow-y:auto}
+.ann-row{display:flex;align-items:center;gap:7px;padding:5px 0;font-size:11px;cursor:pointer;border-bottom:1px solid #f4f6f9}
+.ann-row:last-child{border:none}
+.ann-row:hover .ann-t{color:#4285f4}
+.ann-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.ann-t{font-weight:700;min-width:34px;color:#1a1a1a}
+.ann-lbl{flex:1;color:#5f6368;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.empty-state{text-align:center;padding:16px;color:#9aa0a6;font-size:12px}
+.alert{padding:9px 12px;font-size:12px;border-radius:8px;margin-top:6px;line-height:1.5;font-weight:500}
+.alert-ok{background:#e6f4ea;color:#137333;border:1px solid #b7dfbf}
+.alert-err{background:#fce8e6;color:#c62828;border:1px solid #f5c6c2}
+.join-wrap{max-width:340px;margin:20px auto;text-align:center}
+.big-code{font-size:26px;letter-spacing:.16em;text-align:center;font-family:monospace;text-transform:uppercase;width:140px;padding:10px;font-weight:700;background:#ffffff}
+.pub-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid #e4e7ec;border-radius:20px;cursor:pointer;font-size:12px;background:#ffffff;transition:all .12s}
+.pub-chip:hover{border-color:#4285f4;background:#f0f6ff}
+.setup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:flex-start;justify-content:center;padding:20px;z-index:100;overflow-y:auto}
+.setup-box{background:#ffffff;border-radius:16px;padding:20px;width:100%;max-width:480px;display:flex;flex-direction:column;gap:12px;margin-top:10px}
+.step-li{display:flex;gap:10px;align-items:flex-start;font-size:12px;color:#5f6368;padding:4px 0;line-height:1.6}
+.step-badge{width:20px;height:20px;border-radius:50%;background:#e8f0fe;color:#1a56d6;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;margin-top:1px}
+.divider{height:1px;background:#e4e7ec;margin:8px 0}
+</style>
+</head>
+<body>
+<div class="app">
+
+<div class="topbar">
+  <span class="logo">課程觀察工具</span>
+  <div class="rtabs">
+    <button class="rtab" id="tabR" onclick="go('r')">研究者</button>
+    <button class="rtab on" id="tabU" onclick="go('u')">使用者</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:6px">
+    <span id="modeTag" class="pill pill-off">本機</span>
+    <button class="btn sm" onclick="openSetup()" id="setupBtn" style="display:none;padding:4px 9px" title="設定">&#9881;</button>
+  </div>
+</div>
+
+<!-- 研究者面板 -->
+<div id="panR" class="panel" style="display:none">
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="slabel" style="margin:0">場次管理</div>
+      <button class="btn sm btn-blue" onclick="newSess()">+ 新增場次</button>
+    </div>
+    <div id="sessList"><div class="empty-state">尚無場次，點右上方新增</div></div>
+  </div>
+  <div id="editor" style="display:none;flex-direction:column;gap:12px">
+    <div class="card card-hl">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <div class="slabel" style="margin:0">編輯場次</div>
+        <span id="editCode" class="code-tag"></span>
+        <input type="text" id="editName" placeholder="場次名稱" style="flex:1;min-width:100px">
+        <button class="btn sm btn-green" onclick="pubSess()">&#9654; 發布</button>
+        <button class="btn sm btn-red" onclick="delSess()">刪除</button>
+      </div>
+      <div class="g2">
+        <div>
+          <div class="slabel">課程圖表</div>
+          <div class="upzone" onclick="document.getElementById('fImg').click()">
+            <input type="file" id="fImg" accept="image/*" onchange="onImg(event)" style="display:none">
+            <div id="imgPrev">🖼 點擊上傳圖表圖片</div>
+          </div>
+        </div>
+        <div>
+          <div class="slabel">影片連結</div>
+          <input type="text" id="vidUrl" placeholder="YouTube 或 .mp4 網址" style="margin-bottom:8px">
+          <button class="btn sm" onclick="applyVid()" style="width:100%;justify-content:center">套用連結</button>
+          <div style="font-size:10px;color:#9aa0a6;margin-top:5px;text-align:center">YouTube / 直連 mp4 皆可</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap">
+        <span style="font-size:12px;color:#5f6368">起始秒</span>
+        <input type="number" id="eStart" value="0" style="width:65px">
+        <span style="font-size:12px;color:#5f6368">結束秒</span>
+        <input type="number" id="eEnd" value="600" style="width:65px">
+        <button class="btn sm" onclick="saveSess()" style="margin-left:auto">💾 儲存</button>
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div class="slabel" style="margin:0">回收標註 <span id="annCnt" style="font-weight:400;color:#9aa0a6"></span></div>
+        <div style="display:flex;gap:6px">
+          <button class="btn sm" onclick="loadAnns()">↺ 更新</button>
+          <button class="btn sm" onclick="exportJSON()">↓ JSON</button>
+        </div>
+      </div>
+      <div id="resAnns" class="ann-list"><div class="empty-state">尚無標註</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- 使用者面板 -->
+<div id="panU" class="panel">
+  <div id="joinScreen">
+    <div class="card join-wrap">
+      <div style="font-size:26px;margin-bottom:10px">📋</div>
+      <div style="font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:4px">輸入場次代碼</div>
+      <div style="font-size:13px;color:#5f6368;margin-bottom:18px">向研究者取得四位代碼</div>
+      <div style="display:flex;flex-direction:column;gap:10px;align-items:center">
+        <input type="text" id="codeIn" class="big-code" maxlength="4" placeholder="XXXX"
+          oninput="this.value=this.value.toUpperCase()"
+          onkeydown="if(event.key==='Enter')joinSess()">
+        <input type="text" id="nameIn" placeholder="姓名或代號（選填）" style="width:210px;text-align:center">
+        <button class="btn btn-blue" onclick="joinSess()" style="width:160px;justify-content:center;padding:9px 14px">進入場次 →</button>
+      </div>
+      <div id="joinErr" style="display:none;margin-top:10px" class="alert alert-err"></div>
+    </div>
+    <div style="text-align:center;padding:0 16px 16px">
+      <div class="slabel" style="margin-bottom:8px">目前已發布</div>
+      <div id="pubList" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"></div>
+    </div>
+  </div>
+
+  <div id="workspace" style="display:none;flex-direction:column;gap:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:14px;font-weight:700;color:#1a1a1a" id="wsTitle"></span>
+        <span id="wsCode" class="code-tag" style="font-size:11px"></span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:12px;color:#5f6368" id="wsUser"></span>
+        <button class="btn sm" onclick="leaveSess()">← 離開</button>
+      </div>
+    </div>
+    <div class="card" style="padding:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <span style="font-size:12px;font-weight:600;color:#1a1a1a">課程圖表</span>
+        <span id="htip" style="font-size:11px;color:#5f6368"></span>
+      </div>
+      <div class="chart-box" id="cbox">
+        <img id="cimg" style="width:100%;display:block">
+        <div class="chart-hit" id="chit" onclick="cclick(event)" onmousemove="chov(event)" onmouseleave="cleave()"></div>
+        <div class="redline" id="rline" style="left:0%"></div>
+        <div id="mks"></div>
+      </div>
+    </div>
+    <div class="card" style="padding:10px">
+      <div class="vidbox" id="vidArea"></div>
+      <div class="tl-track" onclick="seekBar(event)"><div class="tl-fill" id="tlf" style="width:0%"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#9aa0a6">
+        <span id="ct">0:00</span><span id="dt">--:--</span>
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+        <button class="btn sm" id="mBtn" onclick="toggleAnn()">✏ 標註：關</button>
+        <input type="text" id="albl" placeholder="標註文字（選填）" style="width:120px">
+        <div id="swCont" style="display:flex;gap:4px;align-items:center"></div>
+        <button class="btn sm" onclick="clearAnns()" style="margin-left:auto">清除</button>
+      </div>
+      <div id="uAnns" class="ann-list" style="margin-bottom:10px">
+        <div class="empty-state">開啟標註模式，點圖表加上標記</div>
+      </div>
+      <div id="nfy" style="display:none"></div>
+      <button class="btn btn-green" onclick="submitAnns()" id="subBtn"
+        style="width:100%;justify-content:center;padding:9px">✓ 提交標註</button>
+    </div>
+  </div>
+</div>
+
+<!-- 設定彈出視窗（僅研究者可見）-->
+<div id="setupOverlay" style="display:none" class="setup-overlay" onclick="if(event.target===this)closeSetup()">
+  <div class="setup-box">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:14px;font-weight:700;color:#1a1a1a">⚙ 研究者設定</div>
+      <button class="btn sm" onclick="closeSetup()" style="padding:4px 10px">✕</button>
+    </div>
+    <div>
+      <div class="slabel">Google Apps Script 網址</div>
+      <div style="display:flex;gap:8px">
+        <input type="text" id="gsUrl" placeholder="https://script.google.com/macros/s/…/exec" style="flex:1">
+        <button class="btn sm btn-blue" onclick="connectGS()" id="connectBtn" style="white-space:nowrap;flex-shrink:0">連接</button>
+      </div>
+      <div id="gsErr" style="display:none;margin-top:6px" class="alert alert-err"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="slabel">三步驟設定</div>
+    <div class="step-li"><div class="step-badge">1</div><div>Google 試算表 → 擴充功能 → Apps Script → 貼上程式碼儲存</div></div>
+    <div class="step-li"><div class="step-badge">2</div><div>部署 → 新增部署 → 網路應用程式 → 執行：<strong>我</strong>，存取：<strong>所有人</strong></div></div>
+    <div class="step-li"><div class="step-badge">3</div><div>複製網址貼到上方，按連接</div></div>
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button class="btn sm" onclick="useDemo()" style="flex:1;justify-content:center">本機示範模式</button>
+      <button class="btn sm btn-green" onclick="closeSetup()" style="flex:1;justify-content:center">完成 ✓</button>
+    </div>
+  </div>
+</div>
+
+</div>
+<script>
+const COLS=['#ea4335','#4285f4','#34a853','#fbbc04','#9334e6','#e91e8c'];
+let $gsUrl=null,$mode='demo';
+let sessions={},selId=null;
+let U={annMode:false,color:COLS[0],anns:[],t0:0,t1:600,sessId:null,name:'',isYT:false,ytId:null};
+
+const swCont=document.getElementById('swCont');
+COLS.forEach(c=>{
+  const s=document.createElement('div');s.className='swatch'+(c===U.color?' on':'');s.style.background=c;
+  s.onclick=()=>{U.color=c;document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('on'));s.classList.add('on');};
+  swCont.appendChild(s);
+});
+
+function go(r){
+  ['r','u'].forEach(x=>{
+    document.getElementById('tab'+x.toUpperCase()).classList.toggle('on',x===r);
+    document.getElementById('pan'+x.toUpperCase()).style.display=x===r?'flex':'none';
+  });
+  document.getElementById('setupBtn').style.display=r==='r'?'inline-flex':'none';
+  if(r==='u') refreshPubList();
+}
+
+function openSetup(){document.getElementById('setupOverlay').style.display='flex';}
+function closeSetup(){document.getElementById('setupOverlay').style.display='none';}
+
+function saveLocal(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch(e){}}
+function loadLocal(key){try{const v=localStorage.getItem(key);return v?JSON.parse(v):null;}catch(e){return null;}}
+
+async function connectGS(){
+  const url=document.getElementById('gsUrl').value.trim();
+  const btn=document.getElementById('connectBtn'),err=document.getElementById('gsErr');
+  err.style.display='none';
+  if(!url.includes('script.google.com')){err.textContent='請貼上正確的 Apps Script 網址';err.style.display='block';return;}
+  btn.textContent='連線中…';btn.disabled=true;
+  $gsUrl=url;$mode='google';
+  saveLocal('gsUrl',url);
+  document.getElementById('modeTag').textContent='Google Sheet ✓';
+  document.getElementById('modeTag').className='pill pill-ok';
+  await loadAllSessions();
+  closeSetup();
+  btn.textContent='連接';btn.disabled=false;
+}
+
+function useDemo(){$mode='demo';document.getElementById('modeTag').textContent='本機示範';closeSetup();}
+
+function genCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<4;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
+
+function newSess(){
+  let code;do{code=genCode();}while(sessions[code]);
+  sessions[code]={code,name:'場次 '+code,chartSrc:null,videoUrl:'',t0:0,t1:600,published:false};
+  renderSessList();selectSess(code);
+}
+
+function selectSess(code){
+  selId=code;const s=sessions[code];
+  document.getElementById('editor').style.display='flex';
+  document.getElementById('editCode').textContent=code;
+  document.getElementById('editName').value=s.name;
+  document.getElementById('eStart').value=s.t0;
+  document.getElementById('eEnd').value=s.t1;
+  document.getElementById('vidUrl').value=s.videoUrl||'';
+  const p=document.getElementById('imgPrev');p.innerHTML='';
+  if(s.chartSrc){const i=new Image();i.src=s.chartSrc;i.style.cssText='width:100%;max-height:70px;object-fit:contain;border-radius:6px';p.appendChild(i);}
+  else p.innerHTML='🖼 點擊上傳圖表圖片';
+  renderSessList();loadAnns();
+}
+
+function renderSessList(){
+  const c=document.getElementById('sessList');
+  const keys=Object.keys(sessions);
+  if(!keys.length){c.innerHTML='<div class="empty-state">尚無場次，點右上方新增</div>';return;}
+  c.innerHTML='';
+  keys.forEach(code=>{
+    const s=sessions[code];
+    const row=document.createElement('div');row.className='sess-item'+(selId===code?' active':'');
+    row.innerHTML=`<span class="code-tag">${s.code}</span><span style="flex:1;font-size:13px;font-weight:600;color:#1a1a1a">${s.name}</span><span class="${s.published?'st-pub':'st-draft'}">${s.published?'已發布':'草稿'}</span>`;
+    row.onclick=()=>selectSess(code);c.appendChild(row);
+  });
+}
+
+function store(){saveLocal('sessions',sessions);}
+
+async function loadAllSessions(){
+  const saved=loadLocal('sessions');
+  if(saved) sessions=saved;
+  renderSessList();refreshPubList();
+}
+
+function saveSess(){
+  if(!selId)return;
+  sessions[selId].name=document.getElementById('editName').value||sessions[selId].name;
+  sessions[selId].t0=parseFloat(document.getElementById('eStart').value)||0;
+  sessions[selId].t1=parseFloat(document.getElementById('eEnd').value)||600;
+  renderSessList();store();topNote('已儲存 ✓');
+}
+
+function pubSess(){
+  if(!selId)return;
+  if(!sessions[selId].chartSrc){topNote('請先上傳圖表','err');return;}
+  sessions[selId].name=document.getElementById('editName').value||sessions[selId].name;
+  sessions[selId].published=true;renderSessList();store();topNote('場次 '+selId+' 已發布 ✓');refreshPubList();
+}
+
+function delSess(){
+  if(!selId||!confirm('確定刪除場次 '+selId+'？'))return;
+  delete sessions[selId];selId=null;document.getElementById('editor').style.display='none';renderSessList();store();
+}
+
+function onImg(e){
+  const f=e.target.files[0];if(!f||!selId)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      const cv=document.createElement('canvas');const sc=Math.min(1,1100/img.width);
+      cv.width=Math.floor(img.width*sc);cv.height=Math.floor(img.height*sc);
+      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+      sessions[selId].chartSrc=cv.toDataURL('image/jpeg',.82);
+      const p=document.getElementById('imgPrev');p.innerHTML='';
+      const pi=new Image();pi.src=sessions[selId].chartSrc;pi.style.cssText='width:100%;max-height:70px;object-fit:contain;border-radius:6px';p.appendChild(pi);store();
+    };img.src=ev.target.result;
+  };reader.readAsDataURL(f);
+}
+
+function applyVid(){if(!selId)return;sessions[selId].videoUrl=document.getElementById('vidUrl').value.trim();store();topNote('影片已套用');}
+
+function isYT(u){return u&&(u.includes('youtube.com')||u.includes('youtu.be'));}
+function ytId(u){const m=u.match(/(?:v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);return m?m[1]:null;}
+
+function setupVid(url,t0){
+  const area=document.getElementById('vidArea');
+  U.isYT=isYT(url);U.ytId=U.isYT?ytId(url):null;
+  if(!url){area.innerHTML='<div style="height:36px;display:flex;align-items:center;justify-content:center;font-size:12px;color:#9aa0a6">（未設定影片）</div>';return;}
+  if(U.isYT&&U.ytId){
+    area.innerHTML=`<iframe id="ytf" src="https://www.youtube.com/embed/${U.ytId}?start=${Math.floor(t0||0)}&rel=0" style="width:100%;height:175px;border:none;display:block" allow="autoplay;fullscreen"></iframe>`;
+    document.getElementById('dt').textContent='YT';
+  } else {
+    area.innerHTML=`<video id="uv" controls src="${url}" style="width:100%;max-height:175px;display:block;background:#111"></video>`;
+    const v=document.getElementById('uv');
+    v.ontimeupdate=uptick;
+    v.onloadedmetadata=()=>{document.getElementById('dt').textContent=fmt(v.duration);if(v.duration>0)U.t1=v.duration;};
+  }
+}
+
+async function loadAnns(){
+  if(!selId)return;const c=document.getElementById('resAnns');
+  c.innerHTML='<div class="empty-state">↺ 載入中…</div>';
+  try{
+    let all=[];
+    if($mode==='google'&&$gsUrl){
+      const r=await fetch(`${$gsUrl}?action=getAnns&code=${selId}`,{redirect:'follow'});
+      const d=await r.json();all=d.submissions||[];
+    } else {
+      all=loadLocal('anns_'+selId)||[];
+    }
+    document.getElementById('annCnt').textContent=all.length?`(${all.length} 位)`:'';
+    if(!all.length){c.innerHTML='<div class="empty-state">尚無標註</div>';return;}
+    c.innerHTML='';
+    all.sort((a,b)=>new Date(a.at)-new Date(b.at)).forEach((sub,i)=>{
+      const hdr=document.createElement('div');
+      hdr.style.cssText='font-size:10px;font-weight:700;color:#5f6368;padding:5px 0 3px;border-top:1px solid #f4f6f9;margin-top:4px;display:flex;gap:8px;align-items:center';
+      hdr.innerHTML=`<div class="ann-dot" style="background:${COLS[i%COLS.length]}"></div><span>${sub.name||'使用者'+(i+1)}</span><span style="font-weight:400;color:#9aa0a6">${new Date(sub.at).toLocaleTimeString('zh-TW',{hour:'2-digit',minute:'2-digit'})} · ${sub.anns.length}筆</span>`;
+      c.appendChild(hdr);
+      sub.anns.sort((a,b)=>a.t-b.t).forEach(a=>{
+        const row=document.createElement('div');row.className='ann-row';row.style.paddingLeft='14px';
+        row.innerHTML=`<div class="ann-dot" style="background:${a.col}"></div><span class="ann-t">${fmt(a.t)}</span><span class="ann-lbl">${a.lbl||'（無文字）'}</span>`;
+        c.appendChild(row);
+      });
+    });
+  }catch(e){c.innerHTML=`<div class="empty-state" style="color:#c62828">載入失敗：${e.message}</div>`;}
+}
+
+async function exportJSON(){
+  if(!selId){alert('請先選擇場次');return;}
+  let all=[];
+  if($mode==='google'&&$gsUrl){
+    try{const r=await fetch(`${$gsUrl}?action=getAnns&code=${selId}`,{redirect:'follow'});const d=await r.json();all=d.submissions||[];}catch(e){alert('匯出失敗：'+e.message);return;}
+  } else {all=loadLocal('anns_'+selId)||[];}
+  if(!all.length){alert('尚無資料');return;}
+  const blob=new Blob([JSON.stringify({session:sessions[selId],submissions:all},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`session_${selId}.json`;a.click();
+}
+
+function refreshPubList(){
+  const c=document.getElementById('pubList');
+  const pub=Object.values(sessions).filter(s=>s.published);
+  if(!pub.length){c.innerHTML='<span style="font-size:12px;color:#9aa0a6">研究者尚未發布場次</span>';return;}
+  c.innerHTML='';
+  pub.forEach(s=>{
+    const el=document.createElement('div');el.className='pub-chip';
+    el.innerHTML=`<span class="code-tag" style="font-size:11px">${s.code}</span><span style="font-size:12px;color:#1a1a1a">${s.name}</span>`;
+    el.onclick=()=>{document.getElementById('codeIn').value=s.code;joinSess();};
+    c.appendChild(el);
+  });
+}
+
+async function joinSess(){
+  const code=document.getElementById('codeIn').value.trim().toUpperCase();
+  const nameVal=document.getElementById('nameIn').value.trim()||'匿名';
+  const errEl=document.getElementById('joinErr');errEl.style.display='none';
+  if(!code){errEl.textContent='請輸入場次代碼';errEl.style.display='block';return;}
+  const sess=sessions[code];
+  if(!sess||!sess.published){errEl.textContent='找不到此場次，請確認代碼';errEl.style.display='block';return;}
+  U.sessId=code;U.name=nameVal;U.t0=sess.t0;U.t1=sess.t1;U.anns=[];U.annMode=false;
+  document.getElementById('wsTitle').textContent=sess.name;
+  document.getElementById('wsCode').textContent=code;
+  document.getElementById('wsUser').textContent=nameVal;
+  if(sess.chartSrc)document.getElementById('cimg').src=sess.chartSrc;
+  setupVid(sess.videoUrl||'',sess.t0);
+  document.getElementById('joinScreen').style.display='none';
+  document.getElementById('workspace').style.display='flex';
+  document.getElementById('mBtn').textContent='✏ 標註：關';
+  document.getElementById('mBtn').className='btn sm';
+  document.getElementById('chit').style.cursor='pointer';
+  renderMks();renderUList();
+}
+
+function leaveSess(){
+  U.sessId=null;U.anns=[];
+  document.getElementById('joinScreen').style.display='block';
+  document.getElementById('workspace').style.display='none';
+  document.getElementById('codeIn').value='';refreshPubList();
+}
+
+function fmt(s){const m=Math.floor(s/60),sec=Math.floor(s%60);return m+':'+(sec<10?'0':'')+sec;}
+function pctToT(p){return U.t0+p*(U.t1-U.t0);}
+function tToPct(t){return (t-U.t0)/(U.t1-U.t0);}
+
+function cclick(e){
+  const r=document.getElementById('cbox').getBoundingClientRect();
+  const p=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));const t=pctToT(p);
+  if(U.annMode){U.anns.push({id:Date.now(),p,t,lbl:document.getElementById('albl').value||'',col:U.color});renderMks();renderUList();}
+  else seekT(t);
+}
+function chov(e){
+  const r=document.getElementById('cbox').getBoundingClientRect();
+  const p=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
+  document.getElementById('htip').textContent=fmt(pctToT(p))+(U.annMode?' — 點擊標註':' — 點擊跳轉');
+}
+function cleave(){document.getElementById('htip').textContent='';}
+
+function seekT(t){
+  t=Math.max(U.t0,Math.min(t,U.t1));
+  if(U.isYT&&U.ytId)document.getElementById('ytf').src=`https://www.youtube.com/embed/${U.ytId}?start=${Math.floor(t)}&autoplay=1&rel=0`;
+  else{const v=document.getElementById('uv');if(v)v.currentTime=t;}
+  const pct=tToPct(t);
+  document.getElementById('rline').style.left=(Math.max(0,Math.min(1,pct))*100)+'%';
+  document.getElementById('tlf').style.width=(Math.max(0,Math.min(1,pct))*100)+'%';
+  document.getElementById('ct').textContent=fmt(t);
+}
+function seekBar(e){
+  const r=e.currentTarget.getBoundingClientRect();
+  seekT(pctToT(Math.max(0,Math.min(1,(e.clientX-r.left)/r.width))));
+}
+function uptick(){
+  const v=document.getElementById('uv');if(!v||!v.duration)return;
+  const pct=tToPct(v.currentTime);
+  document.getElementById('rline').style.left=(Math.max(0,Math.min(1,pct))*100)+'%';
+  document.getElementById('tlf').style.width=(Math.max(0,Math.min(1,pct))*100)+'%';
+  document.getElementById('ct').textContent=fmt(v.currentTime);
+}
+function toggleAnn(){
+  U.annMode=!U.annMode;
+  document.getElementById('mBtn').textContent='✏ 標註：'+(U.annMode?'開':'關');
+  document.getElementById('mBtn').className='btn sm'+(U.annMode?' btn-warn':'');
+  document.getElementById('chit').style.cursor=U.annMode?'crosshair':'pointer';
+}
+function renderMks(){
+  const c=document.getElementById('mks');c.innerHTML='';
+  U.anns.forEach(a=>{
+    const m=document.createElement('div');m.className='marker';m.style.cssText=`left:${a.p*100}%;background:${a.col}`;
+    if(a.lbl){const f=document.createElement('div');f.className='marker-lbl';f.style.cssText=`background:${a.col}22;color:${a.col}`;f.textContent=a.lbl;m.appendChild(f);}
+    c.appendChild(m);
+  });
+}
+function renderUList(){
+  const c=document.getElementById('uAnns');
+  if(!U.anns.length){c.innerHTML='<div class="empty-state">開啟標註模式，點圖表加上標記</div>';return;}
+  c.innerHTML='';
+  [...U.anns].sort((a,b)=>a.t-b.t).forEach(a=>{
+    const row=document.createElement('div');row.className='ann-row';
+    row.innerHTML=`<div class="ann-dot" style="background:${a.col}"></div><span class="ann-t">${fmt(a.t)}</span><span class="ann-lbl">${a.lbl||'（無文字）'}</span><button onclick="delA(${a.id})" style="background:none;border:none;cursor:pointer;color:#9aa0a6;font-size:11px;flex-shrink:0">✕</button>`;
+    row.onclick=e=>{if(e.target.tagName==='BUTTON')return;seekT(a.t);};
+    c.appendChild(row);
+  });
+}
+function delA(id){U.anns=U.anns.filter(a=>a.id!==id);renderMks();renderUList();}
+function clearAnns(){U.anns=[];renderMks();renderUList();}
+
+async function submitAnns(){
+  if(!U.anns.length){showNfy('尚無標註可提交','err');return;}
+  const btn=document.getElementById('subBtn');btn.disabled=true;btn.textContent='提交中…';
+  const sub={uid:'u_'+Date.now().toString(36),sessionCode:U.sessId,name:U.name,at:new Date().toISOString(),anns:U.anns};
+  try{
+    if($mode==='google'&&$gsUrl){
+      await fetch($gsUrl,{method:'POST',mode:'no-cors',body:JSON.stringify({action:'submit',...sub})});
+    } else {
+      const all=loadLocal('anns_'+U.sessId)||[];
+      all.push(sub);saveLocal('anns_'+U.sessId,all);
+    }
+    showNfy('✓ 已提交 '+U.anns.length+' 個標註！');
+  }catch(e){showNfy('提交失敗：'+e.message,'err');}
+  finally{btn.disabled=false;btn.textContent='✓ 提交標註';}
+}
+
+function showNfy(msg,type){
+  const el=document.getElementById('nfy');el.className='alert '+(type==='err'?'alert-err':'alert-ok');
+  el.innerHTML=msg;el.style.display='block';setTimeout(()=>el.style.display='none',3500);
+}
+function topNote(msg,type){
+  const el=document.getElementById('modeTag');const orig=el.textContent,cls=el.className;
+  el.textContent=msg;el.className='pill '+(type==='err'?'pill-off':'pill-ok');
+  setTimeout(()=>{el.textContent=orig;el.className=cls;},2500);
+}
+
+// 初始化：讀取本機設定
+(function init(){
+  const url=loadLocal('gsUrl');
+  if(url){$gsUrl=url;$mode='google';
+    document.getElementById('gsUrl').value=url;
+    document.getElementById('modeTag').textContent='Google Sheet ✓';
+    document.getElementById('modeTag').className='pill pill-ok';
+  }
+  loadAllSessions();
+})();
+</script>
+</body>
+</html>
