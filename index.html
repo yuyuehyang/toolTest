@@ -16,7 +16,6 @@ html,body{background:#ffffff;margin:0;padding:0}
 .pill{font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;white-space:nowrap}
 .pill-ok{background:#e6f4ea;color:#137333;border:1px solid #b7dfbf}
 .pill-off{background:#f4f6f9;color:#5f6368;border:1px solid #e4e7ec}
-.pill-warn{background:#fff8e1;color:#e65100;border:1px solid #ffe082}
 .panel{padding:16px;display:flex;flex-direction:column;gap:14px;background:#f4f6f9}
 .card{background:#ffffff;border:1px solid #e4e7ec;border-radius:12px;padding:14px}
 .card-hl{border-color:#4285f4;background:#fafcff}
@@ -36,8 +35,6 @@ input[type=text],input[type=number]{font-size:12px;padding:8px 10px;border-radiu
 input:focus{border-color:#4285f4;box-shadow:0 0 0 3px rgba(66,133,244,.12)}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 @media(max-width:540px){.g2{grid-template-columns:1fr}}
-.upzone{border:1.5px dashed #dadce0;border-radius:8px;padding:18px;text-align:center;cursor:pointer;color:#9aa0a6;font-size:12px;transition:all .15s;background:#fafafa}
-.upzone:hover{border-color:#4285f4;background:#f0f6ff;color:#1a56d6}
 .sess-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;border:1px solid #e8eaed;margin-bottom:6px;cursor:pointer;background:#ffffff;transition:all .12s}
 .sess-item:hover{background:#f8f9fa}
 .sess-item.active{border-color:#4285f4;background:#f0f6ff}
@@ -75,10 +72,11 @@ video{width:100%;display:block;max-height:175px;object-fit:contain}
 .pub-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid #e4e7ec;border-radius:20px;cursor:pointer;font-size:12px;background:#ffffff;transition:all .12s}
 .pub-chip:hover{border-color:#4285f4;background:#f0f6ff}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.35);display:flex;align-items:flex-start;justify-content:center;padding:20px;z-index:100;overflow-y:auto}
-.overlay-box{background:#ffffff;border-radius:16px;padding:20px;width:100%;max-width:460px;display:flex;flex-direction:column;gap:12px;margin-top:10px}
+.overlay-box{background:#ffffff;border-radius:16px;padding:20px;width:100%;max-width:440px;display:flex;flex-direction:column;gap:12px;margin-top:10px}
 .divider{height:1px;background:#e4e7ec;margin:4px 0}
 .spin{display:inline-block;animation:sp .7s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
+.hint-box{background:#fff8e1;border:1px solid #ffe082;border-radius:8px;padding:10px 12px;font-size:11px;color:#e65100;line-height:1.7}
 </style>
 </head>
 <body>
@@ -91,7 +89,7 @@ video{width:100%;display:block;max-height:175px;object-fit:contain}
     <button class="rtab on" id="tabU" onclick="go('u')">使用者</button>
   </div>
   <div style="display:flex;align-items:center;gap:6px">
-    <span id="modeTag" class="pill pill-warn">設定中…</span>
+    <span id="modeTag" class="pill pill-off">連線中…</span>
     <button class="btn sm" onclick="openSetup()" id="setupBtn" style="display:none;padding:4px 9px">⚙</button>
   </div>
 </div>
@@ -105,38 +103,48 @@ video{width:100%;display:block;max-height:175px;object-fit:contain}
     </div>
     <div id="sessList"><div class="empty-state">尚無場次</div></div>
   </div>
+
   <div id="editor" style="display:none;flex-direction:column;gap:12px">
     <div class="card card-hl">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
         <div class="slabel" style="margin:0">編輯場次</div>
-        <span id="editCode" class="code-tag"></span>
-        <input type="text" id="editName" placeholder="場次名稱" style="flex:1;min-width:100px">
         <button class="btn sm btn-green" id="pubBtn" onclick="pubSess()">▶ 發布</button>
         <button class="btn sm btn-red" onclick="delSess()">刪除</button>
       </div>
-      <div class="g2">
+
+      <div style="display:flex;flex-direction:column;gap:10px">
         <div>
-          <div class="slabel">課程圖表</div>
-          <div class="upzone" onclick="document.getElementById('fImg').click()">
-            <input type="file" id="fImg" accept="image/*" onchange="onImg(event)" style="display:none">
-            <div id="imgPrev">🖼 點擊上傳圖表圖片</div>
+          <div class="slabel">場次代碼（自訂，受測者輸入此代碼進入）</div>
+          <input type="text" id="editCode" placeholder="例如：0901、CLS1、W3MON" maxlength="8"
+            oninput="this.value=this.value.toUpperCase()" style="font-family:monospace;font-weight:700;letter-spacing:.06em">
+          <div style="font-size:10px;color:#9aa0a6;margin-top:4px">建議用日期或課程縮寫，方便辨識，上限 8 字元</div>
+        </div>
+        <div>
+          <div class="slabel">場次名稱</div>
+          <input type="text" id="editName" placeholder="例如：9月1日 第三節">
+        </div>
+        <div class="g2">
+          <div>
+            <div class="slabel">課程圖表 URL</div>
+            <input type="text" id="chartUrl" placeholder="https://raw.githubusercontent.com/…/image.jpg">
+            <div style="font-size:10px;color:#9aa0a6;margin-top:4px">把圖片上傳到 GitHub → 複製 Raw 連結</div>
+          </div>
+          <div>
+            <div class="slabel">影片連結</div>
+            <input type="text" id="vidUrl" placeholder="YouTube 或 .mp4 網址">
+            <div style="font-size:10px;color:#9aa0a6;margin-top:4px">YouTube / 直連 mp4 皆可</div>
           </div>
         </div>
-        <div>
-          <div class="slabel">影片連結</div>
-          <input type="text" id="vidUrl" placeholder="YouTube 或 .mp4 網址" style="margin-bottom:8px">
-          <button class="btn sm" onclick="applyVid()" style="width:100%;justify-content:center">套用連結</button>
-          <div style="font-size:10px;color:#9aa0a6;margin-top:5px;text-align:center">YouTube / 直連 mp4 皆可</div>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <span style="font-size:12px;color:#5f6368">起始秒</span>
+          <input type="number" id="eStart" value="0" style="width:65px">
+          <span style="font-size:12px;color:#5f6368">結束秒</span>
+          <input type="number" id="eEnd" value="600" style="width:65px">
+          <button class="btn sm" id="saveBtn" onclick="saveSess()" style="margin-left:auto">💾 儲存至雲端</button>
         </div>
       </div>
-      <div style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap">
-        <span style="font-size:12px;color:#5f6368">起始秒</span>
-        <input type="number" id="eStart" value="0" style="width:65px">
-        <span style="font-size:12px;color:#5f6368">結束秒</span>
-        <input type="number" id="eEnd" value="600" style="width:65px">
-        <button class="btn sm" id="saveBtn" onclick="saveSess()" style="margin-left:auto">💾 儲存至雲端</button>
-      </div>
     </div>
+
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div class="slabel" style="margin:0">回收標註 <span id="annCnt" style="font-weight:400;color:#9aa0a6"></span></div>
@@ -156,9 +164,9 @@ video{width:100%;display:block;max-height:175px;object-fit:contain}
     <div class="card join-wrap">
       <div style="font-size:26px;margin-bottom:10px">📋</div>
       <div style="font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:4px">輸入場次代碼</div>
-      <div style="font-size:13px;color:#5f6368;margin-bottom:18px">向研究者取得四位代碼</div>
+      <div style="font-size:13px;color:#5f6368;margin-bottom:18px">向研究者取得代碼</div>
       <div style="display:flex;flex-direction:column;gap:10px;align-items:center">
-        <input type="text" id="codeIn" class="big-code" maxlength="4" placeholder="XXXX"
+        <input type="text" id="codeIn" class="big-code" maxlength="8" placeholder="代碼"
           oninput="this.value=this.value.toUpperCase()"
           onkeydown="if(event.key==='Enter')joinSess()">
         <input type="text" id="nameIn" placeholder="姓名或代號（選填）" style="width:210px;text-align:center">
@@ -171,6 +179,7 @@ video{width:100%;display:block;max-height:175px;object-fit:contain}
       <div id="pubList" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap"></div>
     </div>
   </div>
+
   <div id="workspace" style="display:none;flex-direction:column;gap:12px">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">
       <div style="display:flex;align-items:center;gap:10px">
@@ -182,6 +191,7 @@ video{width:100%;display:block;max-height:175px;object-fit:contain}
         <button class="btn sm" onclick="leaveSess()">← 離開</button>
       </div>
     </div>
+
     <div class="card" style="padding:10px">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
         <span style="font-size:12px;font-weight:600;color:#1a1a1a">課程圖表</span>
@@ -194,6 +204,7 @@ video{width:100%;display:block;max-height:175px;object-fit:contain}
         <div id="mks"></div>
       </div>
     </div>
+
     <div class="card" style="padding:10px">
       <div class="vidbox" id="vidArea"></div>
       <div class="tl-track" onclick="seekBar(event)"><div class="tl-fill" id="tlf" style="width:0%"></div></div>
@@ -201,6 +212,7 @@ video{width:100%;display:block;max-height:175px;object-fit:contain}
         <span id="ct">0:00</span><span id="dt">--:--</span>
       </div>
     </div>
+
     <div class="card">
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
         <button class="btn sm" id="mBtn" onclick="toggleAnn()">✏ 標註：關</button>
@@ -225,12 +237,10 @@ video{width:100%;display:block;max-height:175px;object-fit:contain}
       <div style="font-size:14px;font-weight:700">⚙ 研究者設定</div>
       <button class="btn sm" onclick="closeSetup()">✕</button>
     </div>
-    <div style="font-size:12px;color:#5f6368;background:#f4f6f9;padding:10px;border-radius:8px;line-height:1.8">
-      <strong>Apps Script 網址</strong><br>
-      <span id="urlDisp" style="font-family:monospace;font-size:11px;word-break:break-all;color:#1a56d6"></span>
+    <div class="hint-box">
+      圖片建議放 GitHub，取得 Raw 連結格式：<br>
+      <code style="font-size:10px;background:#fff3cd;padding:2px 4px;border-radius:3px">https://raw.githubusercontent.com/帳號/repo/main/images/檔名.jpg</code>
     </div>
-    <div class="divider"></div>
-    <div style="font-size:11px;color:#9aa0a6">場次設定儲存於 Google Sheets，圖表儲存於 Google Drive，所有裝置共享。</div>
     <button class="btn sm btn-green" onclick="closeSetup()" style="justify-content:center">關閉 ✓</button>
   </div>
 </div>
@@ -239,7 +249,7 @@ video{width:100%;display:block;max-height:175px;object-fit:contain}
 <script>
 // ══════════════════════════════════════════════════
 //  ▼▼▼ 將下方換成你的 Apps Script 網址 ▼▼▼
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzBpAITUrN-RpZND-frZoXmDRoN-EuOBmn4NmQZ0QInMusd9AeQFM0OA9uAJRrnal3o/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz5h1KFgaVCC4L0fo3K8CQlav8FtZUeW1WuRtwpx9Ca0cC0uqfVm3M-OuxcsaEr-Chl/exec';
 //  ▲▲▲ 將上方換成你的 Apps Script 網址 ▲▲▲
 // ══════════════════════════════════════════════════
 
@@ -247,7 +257,6 @@ const COLS=['#ea4335','#4285f4','#34a853','#fbbc04','#9334e6','#e91e8c'];
 let sessions={}, selId=null;
 let U={annMode:false,color:COLS[0],anns:[],t0:0,t1:600,sessId:null,name:'',isYT:false,ytId:null};
 
-// 初始化色票
 const swCont=document.getElementById('swCont');
 COLS.forEach(c=>{
   const s=document.createElement('div');s.className='swatch'+(c===U.color?' on':'');s.style.background=c;
@@ -255,17 +264,10 @@ COLS.forEach(c=>{
   swCont.appendChild(s);
 });
 
-// 啟動
-window.addEventListener('DOMContentLoaded', async ()=>{
+window.addEventListener('DOMContentLoaded', async()=>{
   const tag=document.getElementById('modeTag');
-  const urlDisp=document.getElementById('urlDisp');
-  if(APPS_SCRIPT_URL){
-    tag.textContent='Google Sheet ✓';tag.className='pill pill-ok';
-    if(urlDisp) urlDisp.textContent=APPS_SCRIPT_URL;
-  } else {
-    tag.textContent='本機模式';tag.className='pill pill-off';
-    if(urlDisp) urlDisp.textContent='（未設定）';
-  }
+  if(APPS_SCRIPT_URL){tag.textContent='Google Sheet ✓';tag.className='pill pill-ok';}
+  else{tag.textContent='本機模式';tag.className='pill pill-off';}
   await loadAllSessions();
 });
 
@@ -280,134 +282,122 @@ function go(r){
 function openSetup(){document.getElementById('setupOverlay').style.display='flex';}
 function closeSetup(){document.getElementById('setupOverlay').style.display='none';}
 
-// API helpers
 async function apiGet(params){
   const url=APPS_SCRIPT_URL+'?'+new URLSearchParams(params);
   const r=await fetch(url,{redirect:'follow'});
   return r.json();
 }
 async function apiPost(body){
-  const r=await fetch(APPS_SCRIPT_URL,{
-    method:'POST',
-    headers:{'Content-Type':'text/plain'},
-    body:JSON.stringify(body),
-    redirect:'follow'
-  });
+  const r=await fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify(body),redirect:'follow'});
   return r.json();
 }
 
-// Session管理
-function genCode(){const c='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';let s='';for(let i=0;i<4;i++)s+=c[Math.floor(Math.random()*c.length)];return s;}
-
 function newSess(){
-  let code;do{code=genCode();}while(sessions[code]);
-  sessions[code]={code,name:'場次 '+code,chartSrc:null,chartUrl:'',videoUrl:'',t0:0,t1:600,published:false};
-  renderSessList();selectSess(code);
+  // 建立空白場次，等研究者填代碼
+  const tmp='__NEW__'+Date.now();
+  sessions[tmp]={code:'',name:'',chartUrl:'',videoUrl:'',t0:0,t1:600,published:false,_tmp:tmp};
+  selId=tmp;
+  document.getElementById('editor').style.display='flex';
+  document.getElementById('editCode').value='';
+  document.getElementById('editName').value='';
+  document.getElementById('chartUrl').value='';
+  document.getElementById('vidUrl').value='';
+  document.getElementById('eStart').value='0';
+  document.getElementById('eEnd').value='600';
+  renderSessList();
 }
 
-function selectSess(code){
-  selId=code;const s=sessions[code];
+function selectSess(id){
+  selId=id;const s=sessions[id];
   document.getElementById('editor').style.display='flex';
-  document.getElementById('editCode').textContent=code;
+  document.getElementById('editCode').value=s.code;
   document.getElementById('editName').value=s.name;
+  document.getElementById('chartUrl').value=s.chartUrl||'';
+  document.getElementById('vidUrl').value=s.videoUrl||'';
   document.getElementById('eStart').value=s.t0;
   document.getElementById('eEnd').value=s.t1;
-  document.getElementById('vidUrl').value=s.videoUrl||'';
-  const p=document.getElementById('imgPrev');p.innerHTML='';
-  if(s.chartUrl||s.chartSrc){
-    const src=s.chartUrl||s.chartSrc;
-    const i=new Image();i.src=src;i.style.cssText='width:100%;max-height:70px;object-fit:contain;border-radius:6px';
-    p.appendChild(i);
-  } else {p.innerHTML='🖼 點擊上傳圖表圖片';}
   renderSessList();loadAnns();
 }
 
 function renderSessList(){
-  const c=document.getElementById('sessList');const keys=Object.keys(sessions);
+  const c=document.getElementById('sessList');
+  const keys=Object.keys(sessions).filter(k=>!sessions[k]._tmp||k===selId);
   if(!keys.length){c.innerHTML='<div class="empty-state">尚無場次</div>';return;}
   c.innerHTML='';
-  keys.forEach(code=>{
-    const s=sessions[code];
-    const row=document.createElement('div');row.className='sess-item'+(selId===code?' active':'');
-    row.innerHTML=`<span class="code-tag">${s.code}</span><span style="flex:1;font-size:13px;font-weight:600;color:#1a1a1a">${s.name}</span><span class="${s.published?'st-pub':'st-draft'}">${s.published?'已發布':'草稿'}</span>`;
-    row.onclick=()=>selectSess(code);c.appendChild(row);
+  keys.forEach(id=>{
+    const s=sessions[id];
+    if(!s.code&&id!==selId) return;
+    const row=document.createElement('div');row.className='sess-item'+(selId===id?' active':'');
+    row.innerHTML=`<span class="code-tag">${s.code||'（未設定）'}</span><span style="flex:1;font-size:13px;font-weight:600;color:#1a1a1a">${s.name||'新場次'}</span><span class="${s.published?'st-pub':'st-draft'}">${s.published?'已發布':'草稿'}</span>`;
+    row.onclick=()=>selectSess(id);c.appendChild(row);
   });
 }
 
 async function loadAllSessions(){
   if(APPS_SCRIPT_URL){
-    try{const d=await apiGet({action:'getSessions'});if(d.sessions) sessions=d.sessions;}catch(e){}
+    try{const d=await apiGet({action:'getSessions'});if(d.sessions){sessions={};Object.keys(d.sessions).forEach(k=>{sessions[k]=d.sessions[k];});}}catch(e){}
   }
   renderSessList();refreshPubList();
 }
 
-function onImg(e){
-  const f=e.target.files[0];if(!f||!selId)return;
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    const img=new Image();
-    img.onload=()=>{
-      const cv=document.createElement('canvas');const sc=Math.min(1,1100/img.width);
-      cv.width=Math.floor(img.width*sc);cv.height=Math.floor(img.height*sc);
-      cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
-      sessions[selId].chartSrc=cv.toDataURL('image/jpeg',.82);
-      sessions[selId].chartUrl='';
-      const p=document.getElementById('imgPrev');p.innerHTML='';
-      const pi=new Image();pi.src=sessions[selId].chartSrc;pi.style.cssText='width:100%;max-height:70px;object-fit:contain;border-radius:6px';p.appendChild(pi);
-    };img.src=ev.target.result;
-  };reader.readAsDataURL(f);
+function getEditedSess(){
+  const code=document.getElementById('editCode').value.trim().toUpperCase();
+  return {
+    code, name:document.getElementById('editName').value.trim()||code,
+    chartUrl:document.getElementById('chartUrl').value.trim(),
+    videoUrl:document.getElementById('vidUrl').value.trim(),
+    t0:parseFloat(document.getElementById('eStart').value)||0,
+    t1:parseFloat(document.getElementById('eEnd').value)||600,
+    published:selId&&sessions[selId]?sessions[selId].published:false
+  };
 }
 
-function applyVid(){if(!selId)return;sessions[selId].videoUrl=document.getElementById('vidUrl').value.trim();}
-
 async function saveSess(){
-  if(!selId)return;
-  const btn=document.getElementById('saveBtn');btn.disabled=true;btn.innerHTML='<span class="spin">↺</span> 上傳中…';
-  sessions[selId].name=document.getElementById('editName').value||sessions[selId].name;
-  sessions[selId].t0=parseFloat(document.getElementById('eStart').value)||0;
-  sessions[selId].t1=parseFloat(document.getElementById('eEnd').value)||600;
-  sessions[selId].videoUrl=document.getElementById('vidUrl').value.trim();
+  const data=getEditedSess();
+  if(!data.code){alert('請先填入場次代碼');return;}
+  const btn=document.getElementById('saveBtn');btn.disabled=true;btn.innerHTML='<span class="spin">↺</span> 儲存中…';
+  // 如果是新場次（tmp），移除舊key
+  if(selId&&sessions[selId]&&sessions[selId]._tmp){delete sessions[selId];}
+  sessions[data.code]={...data};
+  selId=data.code;
   try{
-    if(APPS_SCRIPT_URL){
-      const payload={action:'saveSession',...sessions[selId]};
-      const res=await apiPost(payload);
-      if(res.chartUrl){sessions[selId].chartUrl=res.chartUrl;sessions[selId].chartSrc=null;}
-    }
+    if(APPS_SCRIPT_URL) await apiPost({action:'saveSession',...data});
     renderSessList();topNote('已儲存 ✓');
   }catch(e){topNote('儲存失敗','err');}
   btn.disabled=false;btn.innerHTML='💾 儲存至雲端';
 }
 
 async function pubSess(){
-  if(!selId)return;
-  if(!sessions[selId].chartSrc&&!sessions[selId].chartUrl){topNote('請先上傳圖表','err');return;}
-  sessions[selId].name=document.getElementById('editName').value||sessions[selId].name;
-  sessions[selId].published=true;
+  const data=getEditedSess();
+  if(!data.code){alert('請先填入場次代碼');return;}
+  if(!data.chartUrl){alert('請填入課程圖表 URL');return;}
+  if(selId&&sessions[selId]&&sessions[selId]._tmp){delete sessions[selId];}
+  data.published=true;
+  sessions[data.code]={...data};
+  selId=data.code;
   const btn=document.getElementById('pubBtn');btn.disabled=true;btn.textContent='發布中…';
   try{
-    if(APPS_SCRIPT_URL){
-      const payload={action:'saveSession',...sessions[selId]};
-      const res=await apiPost(payload);
-      if(res.chartUrl){sessions[selId].chartUrl=res.chartUrl;sessions[selId].chartSrc=null;}
-    }
-    renderSessList();refreshPubList();topNote('場次 '+selId+' 已發布 ✓');
+    if(APPS_SCRIPT_URL) await apiPost({action:'saveSession',...data});
+    renderSessList();refreshPubList();topNote('場次 '+data.code+' 已發布 ✓');
   }catch(e){topNote('發布失敗','err');}
   btn.disabled=false;btn.textContent='▶ 發布';
 }
 
 async function delSess(){
-  if(!selId||!confirm('確定刪除場次 '+selId+'？'))return;
-  if(APPS_SCRIPT_URL){try{await apiPost({action:'deleteSession',code:selId});}catch(e){}}
+  if(!selId||!confirm('確定刪除？'))return;
+  const code=sessions[selId]?.code;
+  if(APPS_SCRIPT_URL&&code){try{await apiPost({action:'deleteSession',code});}catch(e){}}
   delete sessions[selId];selId=null;
   document.getElementById('editor').style.display='none';renderSessList();
 }
 
 async function loadAnns(){
-  if(!selId)return;const c=document.getElementById('resAnns');
+  if(!selId)return;const code=sessions[selId]?.code;if(!code)return;
+  const c=document.getElementById('resAnns');
   c.innerHTML='<div class="empty-state"><span class="spin">↺</span> 載入中…</div>';
   try{
     let all=[];
-    if(APPS_SCRIPT_URL){const d=await apiGet({action:'getAnns',code:selId});all=d.submissions||[];}
+    if(APPS_SCRIPT_URL){const d=await apiGet({action:'getAnns',code});all=d.submissions||[];}
     document.getElementById('annCnt').textContent=all.length?`(${all.length} 位)`:'';
     if(!all.length){c.innerHTML='<div class="empty-state">尚無標註</div>';return;}
     c.innerHTML='';
@@ -427,16 +417,17 @@ async function loadAnns(){
 
 async function exportJSON(){
   if(!selId){alert('請先選擇場次');return;}
+  const code=sessions[selId]?.code;if(!code)return;
   let all=[];
-  if(APPS_SCRIPT_URL){try{const d=await apiGet({action:'getAnns',code:selId});all=d.submissions||[];}catch(e){alert('匯出失敗');return;}}
+  if(APPS_SCRIPT_URL){try{const d=await apiGet({action:'getAnns',code});all=d.submissions||[];}catch(e){alert('匯出失敗');return;}}
   if(!all.length){alert('尚無資料');return;}
   const blob=new Blob([JSON.stringify({session:sessions[selId],submissions:all},null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`session_${selId}.json`;a.click();
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`session_${code}.json`;a.click();
 }
 
 function refreshPubList(){
   const c=document.getElementById('pubList');
-  const pub=Object.values(sessions).filter(s=>s.published);
+  const pub=Object.values(sessions).filter(s=>s.published&&s.code);
   if(!pub.length){c.innerHTML='<span style="font-size:12px;color:#9aa0a6">研究者尚未發布場次</span>';return;}
   c.innerHTML='';
   pub.forEach(s=>{
@@ -454,7 +445,7 @@ async function joinSess(){
   if(!code){errEl.textContent='請輸入場次代碼';errEl.style.display='block';return;}
   errEl.innerHTML='<span class="spin">↺</span> 查詢中…';errEl.className='alert alert-info';errEl.style.display='block';
   let sess=sessions[code];
-  if(!sess&&APPS_SCRIPT_URL){
+  if((!sess||!sess.published)&&APPS_SCRIPT_URL){
     try{const d=await apiGet({action:'getSession',code});if(d&&d.code){sess=sessions[code]=d;}}catch(e){}
   }
   errEl.style.display='none';
@@ -463,8 +454,7 @@ async function joinSess(){
   document.getElementById('wsTitle').textContent=sess.name;
   document.getElementById('wsCode').textContent=code;
   document.getElementById('wsUser').textContent=nameVal;
-  const imgSrc=sess.chartUrl||sess.chartSrc||'';
-  if(imgSrc) document.getElementById('cimg').src=imgSrc;
+  if(sess.chartUrl) document.getElementById('cimg').src=sess.chartUrl;
   setupVid(sess.videoUrl||'',U.t0);
   document.getElementById('joinScreen').style.display='none';
   document.getElementById('workspace').style.display='flex';
